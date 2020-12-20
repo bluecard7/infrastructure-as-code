@@ -16,21 +16,44 @@ resource "aws_security_group" "app_instance" {
   }
 }
 
-resource "aws_instance" "app_instance" {
-  count                  = 3
+resource "aws_instance" "az_a" {
+  count                  = 2
   ami                    = "ami-0e472933a1395e172"
   instance_type          = "t2.micro"
+  subnet_id              = aws_default_subnet.az_a.id
   vpc_security_group_ids = [aws_security_group.app_instance.id]
   key_name               = "test"
   user_data              = <<EOF
-    sudo su
-    yum update -y
-    yum install -y httpd.x86_64
-    systemctl start httpd.service
-    systemctl enable httpd.service
-    echo "Hello World from $(hostname -f)" > /var/www/html/index.html
-    EOF
+#!/bin/sh
+sudo su
+yum update -y
+yum install -y httpd.x86_64
+systemctl start httpd.service
+systemctl enable httpd.service
+echo "Hello World from $(hostname -f)" > /var/www/html/index.html
+EOF
   tags = {
-    Name = "Server ${count.index}"
+    Name = "Server AZ-A ${count.index}"
+  }
+}
+
+resource "aws_instance" "az_b" {
+  count                  = 1
+  ami                    = "ami-0e472933a1395e172"
+  instance_type          = "t2.micro"
+  subnet_id              = aws_default_subnet.az_b.id
+  vpc_security_group_ids = [aws_security_group.app_instance.id]
+  key_name               = "test"
+  user_data              = <<EOF
+#!/bin/sh
+sudo su
+yum update -y
+yum install -y httpd.x86_64
+systemctl start httpd.service
+systemctl enable httpd.service
+echo "Hello World from $(hostname -f)" > /var/www/html/index.html
+EOF
+  tags = {
+    Name = "Server AZ-B ${count.index}"
   }
 }
